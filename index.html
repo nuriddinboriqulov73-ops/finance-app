@@ -8,11 +8,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-
-/* RESET */
 *{margin:0;padding:0;box-sizing:border-box;}
 
-/* BODY */
 body{
   font-family:'Segoe UI',sans-serif;
   background:url('bg.jpg') no-repeat center center/cover;
@@ -46,14 +43,12 @@ body::before{
   border-radius:20px;
 }
 
-/* LOGO */
 .logo{
   width:90px;
   display:block;
   margin:0 auto 15px;
 }
 
-/* INPUT */
 .input-box{
   display:flex;
   background:rgba(255,255,255,0.1);
@@ -96,7 +91,6 @@ button{
   justify-content:space-between;
   align-items:center;
   margin-top:8px;
-  font-size:15px;
 }
 
 .item button{
@@ -106,13 +100,11 @@ button{
   border-radius:10px;
 }
 
-/* CHART */
 canvas{
   width:100%!important;
   height:230px!important;
 }
 
-/* MODAL */
 #modal{
   position:fixed;
   top:0;left:0;
@@ -131,7 +123,6 @@ canvas{
   padding:20px;
   border-radius:20px;
 }
-
 </style>
 </head>
 
@@ -208,6 +199,7 @@ const supabaseClient = supabase.createClient(
 
 let user=null;
 let editId=null;
+let chartInstance;
 
 /* AUTH */
 supabaseClient.auth.onAuthStateChange((event,session)=>{
@@ -280,9 +272,9 @@ list.appendChild(div);
 
 });
 
-balance.innerText="Balans: "+(income-expense);
-incomeEl.innerText="Kirim: "+income;
-expenseEl.innerText="Chiqim: "+expense;
+document.getElementById('balance').innerText="Balans: "+(income-expense);
+document.getElementById('income').innerText="Kirim: "+income;
+document.getElementById('expense').innerText="Chiqim: "+expense;
 
 drawChart(income,expense);
 }
@@ -314,11 +306,13 @@ modal.classList.remove('show');
 }
 
 /* CHART */
-let chart;
 function drawChart(income,expense){
-if(chart) chart.destroy();
 
-chart=new Chart(chart,{
+const ctx = document.getElementById('chart');
+
+if(chartInstance) chartInstance.destroy();
+
+chartInstance = new Chart(ctx,{
 type:'doughnut',
 data:{
 labels:['Kirim','Chiqim'],
