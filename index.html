@@ -164,7 +164,7 @@ border-radius:10px;
 
 <div class="container">
 
-<div id="auth">
+<div id="auth" >
 <h2>Login</h2>
 <input id="email">
 <input id="password" type="password">
@@ -376,6 +376,10 @@ loadData();
 // LOGOUT
 async function logout(){
   await supabaseClient.auth.signOut();
+
+  // 🔥 darrov UI ni qaytaramiz
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('auth').classList.remove('hidden');
 }
 </script>
 
