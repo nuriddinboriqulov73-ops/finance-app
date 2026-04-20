@@ -375,9 +375,13 @@ loadData();
 }
 
 // LOGOUT
-function openApp(){
-  document.getElementById('auth').style.display = 'none'; // 🔥 yashiradi
-  document.getElementById('app').classList.remove('hidden');
+async function logout(){
+  await supabaseClient.auth.signOut();
+
+  // UI ni qaytaramiz
+  user = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('auth').style.display = 'block';
 }
 </script>
 
