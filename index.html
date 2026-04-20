@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finance App</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -44,14 +45,8 @@ body::before{
 }
 
 /* LOGIN */
-.login-box{
-  text-align:center;
-}
-
-.logo{
-  width:80px;
-  margin-bottom:15px;
-}
+.login-box{text-align:center;}
+.logo{width:80px;margin-bottom:15px;}
 
 .login-box input{
   width:100%;
@@ -64,11 +59,7 @@ body::before{
 }
 
 /* ROW */
-.row{
-  display:flex;
-  gap:10px;
-}
-
+.row{display:flex;gap:10px;}
 .row input,.row select{
   flex:1;
   padding:12px;
@@ -92,28 +83,34 @@ body::before{
   cursor:pointer;
   transition:0.3s;
 }
-
 .btn:hover{transform:scale(1.05);}
-.btn:active{transform:scale(0.95);}
+.btn:active{transform:scale(0.9);}
 
 /* ITEM */
 .item{
   display:flex;
   justify-content:space-between;
-  padding:10px;
+  align-items:center;
+  padding:12px;
   margin-top:8px;
   border-radius:12px;
   background:rgba(255,255,255,0.05);
 }
 
-.actions{display:flex;gap:5px;}
+.actions{display:flex;gap:6px;}
+
 .actions button{
   width:35px;height:35px;
   border:none;border-radius:8px;
+  background:#6366f1;
+  color:#fff;
+  transition:0.2s;
 }
-.actions button:last-child{
-  background:#ef4444;
-}
+
+.actions button:last-child{background:#ef4444;}
+
+.actions button:hover{transform:scale(1.1);}
+.actions button:active{transform:scale(0.8);}
 
 /* LOADING */
 .loading{
@@ -147,6 +144,18 @@ body::before{
 }
 
 canvas{width:100%!important;height:220px!important;}
+
+/* 📱 RESPONSIVE */
+@media(max-width:768px){
+.container{max-width:95%;}
+.card{padding:15px;}
+.btn{font-size:14px;}
+}
+
+@media(max-width:480px){
+.row{flex-direction:column;}
+canvas{height:180px!important;}
+}
 </style>
 </head>
 
@@ -155,13 +164,14 @@ canvas{width:100%!important;height:220px!important;}
 <div id="loading" class="loading"><div class="loader"></div></div>
 <div id="success" class="success">✔ Saqlandi</div>
 
-<!-- LOGIN -->
+<!-- AUTH -->
 <div id="auth" class="container">
 <div class="card login-box">
 <img src="logo.jpg" class="logo">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button class="btn" onclick="login()">Kirish</button>
+<button class="btn" onclick="signup()">Ro‘yxatdan o‘tish</button>
 </div>
 </div>
 
@@ -202,29 +212,23 @@ let user=null;
 let chartInstance;
 
 function loadOn(x){loading.style.display=x?'flex':'none';}
-function ok(){
-success.style.display='block';
-setTimeout(()=>success.style.display='none',1500);
-}
+function ok(){success.style.display='block';setTimeout(()=>success.style.display='none',1500);}
 
 supabaseClient.auth.onAuthStateChange((e,s)=>{
-if(s){
-user=s.user;
-auth.classList.add('hidden');
-app.classList.remove('hidden');
-load();
-}else{
-auth.classList.remove('hidden');
-app.classList.add('hidden');
-}
+if(s){user=s.user;auth.classList.add('hidden');app.classList.remove('hidden');load();}
+else{auth.classList.remove('hidden');app.classList.add('hidden');}
 });
+
+async function signup(){
+loadOn(true);
+await supabaseClient.auth.signUp({email:email.value,password:password.value});
+loadOn(false);
+ok();
+}
 
 async function login(){
 loadOn(true);
-await supabaseClient.auth.signInWithPassword({
-email:email.value,
-password:password.value
-});
+await supabaseClient.auth.signInWithPassword({email:email.value,password:password.value});
 loadOn(false);
 }
 
@@ -254,11 +258,13 @@ list.innerHTML='';
 data.forEach(t=>{
 t.type==='income'?inc+=t.amount:exp+=t.amount;
 
+let typeText = t.type==='income' ? 'Kirim' : 'Chiqim';
+
 let div=document.createElement('div');
 div.className='item';
 
 div.innerHTML=`
-<span>${t.type} - ${t.amount}</span>
+<span>${typeText} - ${t.amount}</span>
 <div class="actions">
 <button onclick="del('${t.id}')">❌</button>
 </div>`;
@@ -281,7 +287,6 @@ load();
 function draw(i,e){
 const ctx=document.getElementById('chart');
 if(chartInstance) chartInstance.destroy();
-
 chartInstance=new Chart(ctx,{
 type:'doughnut',
 data:{datasets:[{data:[i,e]}]},
