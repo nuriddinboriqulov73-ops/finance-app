@@ -212,13 +212,9 @@ border-radius:10px;
 </div>
 
 <script>
-const supabaseClient = supabase.createClient(
-"https://stcuwmhrnokmyonycqcj.supabase.co",
-"sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
-  
-);
-  supabaseClient.auth.onAuthStateChange((event, session) => {
+const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supabase.co","sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye");
 
+supabaseClient.auth.onAuthStateChange((event, session) => {
   if(session){
     user = session.user;
     openApp();
@@ -227,7 +223,6 @@ const supabaseClient = supabase.createClient(
     document.getElementById('app').classList.add('hidden');
     document.getElementById('auth').style.display = 'block';
   }
-
 });
 
 let user=null;
@@ -377,11 +372,6 @@ loadData();
 // LOGOUT
 async function logout(){
   await supabaseClient.auth.signOut();
-
-  // UI ni qaytaramiz
-  user = null;
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('auth').style.display = 'block';
 }
 </script>
 
