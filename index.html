@@ -279,7 +279,13 @@ loadData();
 // LOGOUT
 async function logout(){
   await supabaseClient.auth.signOut();
-  location.reload();
+
+  // 🔥 userni tozalaymiz
+  user = null;
+
+  // 🔥 UI ni qaytaramiz
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('auth').style.display = 'block';
 }
 </script>
 
