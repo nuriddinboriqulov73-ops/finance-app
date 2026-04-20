@@ -36,7 +36,6 @@ body::before{
 .hidden{display:none;}
 
 .card{
-  position:relative;
   background: rgba(255,255,255,0.08);
   backdrop-filter: blur(15px);
   border:1px solid rgba(255,255,255,0.2);
@@ -52,120 +51,115 @@ body::before{
 }
 
 /* INPUT */
-.input-box{
+.row{
   display:flex;
-  background:rgba(255,255,255,0.1);
-  padding:10px;
-  border-radius:12px;
-  margin-top:10px;
+  gap:10px;
+  margin-bottom:10px;
 }
 
-.input-box input{
+.row input,.row select{
+  flex:1;
+  background:rgba(255,255,255,0.1);
   border:none;
-  background:none;
-  outline:none;
+  border-radius:12px;
+  padding:12px;
   color:#fff;
-  width:100%;
 }
+
+.row input{flex:2;}
 
 /* BUTTON */
-button{
+.add-btn{
   width:100%;
-  padding:12px;
-  margin-top:10px;
+  padding:14px;
   border:none;
-  border-radius:12px;
+  border-radius:14px;
   background:linear-gradient(135deg,#6366f1,#8b5cf6);
   color:#fff;
+  font-weight:bold;
   cursor:pointer;
+  transition:0.3s;
 }
+
+.add-btn:hover{transform:scale(1.05);}
+.add-btn:active{transform:scale(0.95);}
 
 /* ITEM */
 .item{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  padding:12px;
-  margin-top:10px;
-  border-radius:14px;
-  background:rgba(255,255,255,0.06);
-  transition:0.3s;
+  padding:10px;
+  margin-top:8px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.05);
 }
 
-.item:hover{
-  transform:translateY(-3px);
-  background:rgba(255,255,255,0.12);
-  box-shadow:0 10px 25px rgba(0,0,0,0.4);
-}
-
-.actions{
-  display:flex;
-  gap:8px;
-}
-
+.actions{display:flex;gap:5px;}
 .actions button{
-  width:36px;
-  height:36px;
-  border-radius:10px;
-  padding:0;
-  font-size:16px;
+  width:35px;height:35px;border:none;border-radius:8px;
 }
-
 .actions button:last-child{
-  background:linear-gradient(135deg,#ef4444,#f87171);
+  background:#ef4444;
 }
 
-/* CHART */
-canvas{
-  width:100%!important;
-  height:230px!important;
-}
-
-/* MODAL */
-#modal{
+/* LOADING */
+.loading{
   position:fixed;
   top:0;left:0;
-  width:100%;
-  height:100%;
+  width:100%;height:100%;
   background:rgba(0,0,0,0.7);
   display:none;
   align-items:center;
   justify-content:center;
 }
 
-#modal.show{display:flex;}
-
-.modal-box{
-  background:#1e293b;
-  padding:20px;
-  border-radius:20px;
+.loader{
+  width:50px;height:50px;
+  border:5px solid #fff;
+  border-top:5px solid transparent;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
 }
+
+@keyframes spin{
+  100%{transform:rotate(360deg);}
+}
+
+/* SUCCESS */
+.success{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#22c55e;
+  padding:10px 20px;
+  border-radius:10px;
+  display:none;
+}
+
+canvas{width:100%!important;height:220px!important;}
 </style>
 </head>
 
 <body>
 
-<!-- AUTH -->
+<div class="loading" id="loading">
+  <div class="loader"></div>
+</div>
+
+<div class="success" id="success">✔ Saqlandi</div>
+
 <div id="auth" class="container">
 <img src="logo.jpg" class="logo">
 
 <div class="card">
-<h2>Login</h2>
-
-<div class="input-box">
 <input id="email" placeholder="Email">
-</div>
-
-<div class="input-box">
 <input id="password" type="password" placeholder="Password">
-</div>
 
-<button onclick="signup()">Ro‘yxatdan o‘tish</button>
-<button onclick="login()">Kirish</button>
+<button class="add-btn" onclick="login()">Kirish</button>
 </div>
 </div>
 
-<!-- APP -->
 <div id="app" class="container hidden">
 
 <div class="card">
@@ -179,189 +173,103 @@ canvas{
 </div>
 
 <div class="card">
+<div class="row">
 <input id="amount" placeholder="Summa">
 <select id="type">
 <option value="income">Kirim</option>
 <option value="expense">Chiqim</option>
 </select>
-<button onclick="add()">Qo‘shish</button>
+</div>
+<button class="add-btn" onclick="add()">Qo‘shish</button>
 </div>
 
 <div class="card" id="list"></div>
 
-<button onclick="logout()">Chiqish</button>
+<button class="add-btn" onclick="logout()">Chiqish</button>
 
-</div>
-
-<!-- MODAL -->
-<div id="modal">
-<div class="modal-box">
-<input id="editAmount">
-<button onclick="saveEdit()">Saqlash</button>
-<button onclick="closeModal()">Bekor</button>
-</div>
 </div>
 
 <script>
-
-const supabaseClient = supabase.createClient(
-"https://stcuwmhrnokmyonycqcj.supabase.co",
-"sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
-);
+const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supabase.co","sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye");
 
 let user=null;
-let editId=null;
 let chartInstance;
 
-/* AUTH */
-supabaseClient.auth.onAuthStateChange((event,session)=>{
-if(session){
-user=session.user;
-openApp();
-}else{
-auth.classList.remove('hidden');
-app.classList.add('hidden');
-}
-});
-
-function openApp(){
-auth.classList.add('hidden');
-app.classList.remove('hidden');
-loadData();
+function showLoading(x){loading.style.display=x?'flex':'none';}
+function showSuccess(){
+  success.style.display='block';
+  setTimeout(()=>success.style.display='none',1500);
 }
 
-async function signup(){
-await supabaseClient.auth.signUp({
-email:email.value,
-password:password.value
+supabaseClient.auth.onAuthStateChange((e,s)=>{
+if(s){user=s.user;auth.classList.add('hidden');app.classList.remove('hidden');load();}
+else{auth.classList.remove('hidden');app.classList.add('hidden');}
 });
-}
 
 async function login(){
+showLoading(true);
 await supabaseClient.auth.signInWithPassword({
-email:email.value,
-password:password.value
-});
+email:email.value,password:password.value});
+showLoading(false);
 }
 
 async function logout(){
 await supabaseClient.auth.signOut();
 }
 
-/* DATA */
 async function add(){
+showLoading(true);
 await supabaseClient.from('transactions').insert({
 type:type.value,
 amount:Number(amount.value),
 user_id:user.id
 });
-loadData();
+showLoading(false);
+showSuccess();
+load();
 }
 
-async function loadData(){
+async function load(){
 let {data}=await supabaseClient.from('transactions')
 .select('*').eq('user_id',user.id);
 
-let income=0,expense=0;
+let inc=0,exp=0;
 list.innerHTML='';
 
 data.forEach(t=>{
-if(t.type==='income') income+=t.amount;
-else expense+=t.amount;
-
-let typeText = t.type==='income'?'Kirim':'Chiqim';
+t.type==='income'?inc+=t.amount:exp+=t.amount;
 
 let div=document.createElement('div');
 div.className='item';
-
 div.innerHTML=`
-<span>${typeText} - ${t.amount}</span>
+<span>${t.type} - ${t.amount}</span>
 <div class="actions">
-<button onclick="edit('${t.id}',${t.amount})">✏️</button>
 <button onclick="del('${t.id}')">❌</button>
-</div>
-`;
-
+</div>`;
 list.appendChild(div);
 });
 
-balance.innerText="Balans: "+(income-expense);
-income.innerText="Kirim: "+income;
-expense.innerText="Chiqim: "+expense;
+balance.innerText="Balans: "+(inc-exp);
+income.innerText="Kirim: "+inc;
+expense.innerText="Chiqim: "+exp;
 
-drawChart(income,expense);
+draw(inc,exp);
 }
 
-/* DELETE */
 async function del(id){
 await supabaseClient.from('transactions').delete().eq('id',id);
-loadData();
+load();
 }
 
-/* EDIT */
-function edit(id,amount){
-editId=id;
-editAmount.value=amount;
-modal.classList.add('show');
-}
-
-async function saveEdit(){
-await supabaseClient.from('transactions')
-.update({amount:Number(editAmount.value)})
-.eq('id',editId);
-
-closeModal();
-loadData();
-}
-
-function closeModal(){
-modal.classList.remove('show');
-}
-
-/* CHART CENTER */
-const centerText={
-id:'centerText',
-beforeDraw(chart){
-const {width,height}=chart;
-const ctx=chart.ctx;
-ctx.restore();
-ctx.font="16px sans-serif";
-ctx.fillStyle="#fff";
-ctx.textAlign="center";
-
-let d=chart.data.datasets[0].data;
-let bal=d[0]-d[1];
-
-ctx.fillText("Balans: "+bal,width/2,height/2);
-ctx.save();
-}
-};
-
-/* CHART */
-function drawChart(income,expense){
-
+function draw(i,e){
 const ctx=document.getElementById('chart');
-
 if(chartInstance) chartInstance.destroy();
-
 chartInstance=new Chart(ctx,{
 type:'doughnut',
-data:{
-labels:['Kirim','Chiqim'],
-datasets:[{
-data:[income,expense],
-backgroundColor:[
-'rgba(59,130,246,0.5)',
-'rgba(239,68,68,0.5)'
-],
-borderWidth:2
-}]
-},
-options:{cutout:'75%'},
-plugins:[centerText]
+data:{datasets:[{data:[i,e]}]},
+options:{cutout:'70%'}
 });
 }
-
 </script>
 
 </body>
