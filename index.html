@@ -12,10 +12,10 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
-  font-family:'Segoe UI',sans-serif;
+  font-family:sans-serif;
   background:url('bg.jpg') no-repeat center/cover;
-  min-height:100vh;
   color:#fff;
+  min-height:100vh;
 }
 
 body::before{
@@ -33,95 +33,74 @@ body::before{
   padding:15px;
 }
 
-.hidden{display:none;}
-
 .card{
   background:rgba(255,255,255,0.08);
   backdrop-filter:blur(15px);
-  border:1px solid rgba(255,255,255,0.2);
-  padding:20px;
-  margin-top:20px;
   border-radius:20px;
+  padding:20px;
+  margin-top:15px;
 }
 
 /* LOGIN */
 .login-box{text-align:center;}
-.logo{width:80px;margin-bottom:15px;}
+.logo{width:80px;margin-bottom:10px;}
 
-.login-box input{
+input{
   width:100%;
   padding:12px;
   margin-top:10px;
   border:none;
-  border-radius:12px;
+  border-radius:10px;
   background:rgba(255,255,255,0.1);
   color:#fff;
 }
 
 /* ROW */
 .row{display:flex;gap:10px;}
-.row input,.row select{
-  flex:1;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  background:rgba(255,255,255,0.1);
-  color:#fff;
-}
-.row input{flex:2}
+.row input{flex:2;}
+.row select{flex:1;}
 
 /* BUTTON */
 .btn{
   width:100%;
-  margin-top:12px;
-  padding:14px;
+  margin-top:10px;
+  padding:12px;
   border:none;
-  border-radius:14px;
-  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  border-radius:12px;
+  background:#6366f1;
   color:#fff;
-  font-weight:bold;
   cursor:pointer;
-  transition:0.3s;
 }
-.btn:hover{transform:scale(1.05);}
-.btn:active{transform:scale(0.9);}
 
 /* ITEM */
 .item{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:12px;
-  margin-top:8px;
+  margin-top:10px;
   border-radius:12px;
   background:rgba(255,255,255,0.05);
+  transition:0.2s;
 }
-
-.actions{display:flex;gap:6px;}
 
 .actions button{
   width:35px;height:35px;
   border:none;border-radius:8px;
-  background:#6366f1;
+  background:#ef4444;
   color:#fff;
-  transition:0.2s;
 }
-
-.actions button:last-child{background:#ef4444;}
-
-.actions button:hover{transform:scale(1.1);}
-.actions button:active{transform:scale(0.8);}
 
 /* LOADING */
 .loading{
   position:fixed;
   top:0;left:0;
   width:100%;height:100%;
-  background:rgba(0,0,0,0.7);
   display:none;
   align-items:center;
   justify-content:center;
+  background:rgba(0,0,0,0.7);
 }
+
 .loader{
   width:50px;height:50px;
   border:5px solid #fff;
@@ -129,32 +108,18 @@ body::before{
   border-radius:50%;
   animation:spin 1s linear infinite;
 }
+
 @keyframes spin{100%{transform:rotate(360deg);}}
 
-/* SUCCESS */
 .success{
   position:fixed;
   bottom:20px;
   left:50%;
   transform:translateX(-50%);
   background:#22c55e;
-  padding:10px 20px;
+  padding:10px;
   border-radius:10px;
   display:none;
-}
-
-canvas{width:100%!important;height:220px!important;}
-
-/* 📱 RESPONSIVE */
-@media(max-width:768px){
-.container{max-width:95%;}
-.card{padding:15px;}
-.btn{font-size:14px;}
-}
-
-@media(max-width:480px){
-.row{flex-direction:column;}
-canvas{height:180px!important;}
 }
 </style>
 </head>
@@ -164,7 +129,6 @@ canvas{height:180px!important;}
 <div id="loading" class="loading"><div class="loader"></div></div>
 <div id="success" class="success">✔ Saqlandi</div>
 
-<!-- AUTH -->
 <div id="auth" class="container">
 <div class="card login-box">
 <img src="logo.jpg" class="logo">
@@ -175,8 +139,7 @@ canvas{height:180px!important;}
 </div>
 </div>
 
-<!-- APP -->
-<div id="app" class="container hidden">
+<div id="app" class="container" style="display:none;">
 
 <div class="card">
 <h2 id="balance">Balans: 0</h2>
@@ -209,21 +172,20 @@ canvas{height:180px!important;}
 const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supabase.co","sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye");
 
 let user=null;
-let chartInstance;
+let chart;
 
 function loadOn(x){loading.style.display=x?'flex':'none';}
 function ok(){success.style.display='block';setTimeout(()=>success.style.display='none',1500);}
 
 supabaseClient.auth.onAuthStateChange((e,s)=>{
-if(s){user=s.user;auth.classList.add('hidden');app.classList.remove('hidden');load();}
-else{auth.classList.remove('hidden');app.classList.add('hidden');}
+if(s){user=s.user;auth.style.display='none';app.style.display='block';load();}
+else{auth.style.display='block';app.style.display='none';}
 });
 
 async function signup(){
 loadOn(true);
 await supabaseClient.auth.signUp({email:email.value,password:password.value});
-loadOn(false);
-ok();
+loadOn(false);ok();
 }
 
 async function login(){
@@ -232,9 +194,7 @@ await supabaseClient.auth.signInWithPassword({email:email.value,password:passwor
 loadOn(false);
 }
 
-async function logout(){
-await supabaseClient.auth.signOut();
-}
+async function logout(){await supabaseClient.auth.signOut();}
 
 async function add(){
 loadOn(true);
@@ -243,9 +203,7 @@ type:type.value,
 amount:Number(amount.value),
 user_id:user.id
 });
-loadOn(false);
-ok();
-load();
+loadOn(false);ok();load();
 }
 
 async function load(){
@@ -258,7 +216,7 @@ list.innerHTML='';
 data.forEach(t=>{
 t.type==='income'?inc+=t.amount:exp+=t.amount;
 
-let typeText = t.type==='income' ? 'Kirim' : 'Chiqim';
+let typeText = t.type==='income'?'Kirim':'Chiqim';
 
 let div=document.createElement('div');
 div.className='item';
@@ -268,6 +226,23 @@ div.innerHTML=`
 <div class="actions">
 <button onclick="del('${t.id}')">❌</button>
 </div>`;
+
+/* 🔥 JS HOVER */
+div.addEventListener('mouseenter',()=>{
+  div.style.transform='translateY(-4px) scale(1.02)';
+});
+
+div.addEventListener('mouseleave',()=>{
+  div.style.transform='scale(1)';
+});
+
+div.addEventListener('mousedown',()=>{
+  div.style.transform='scale(0.95)';
+});
+
+div.addEventListener('mouseup',()=>{
+  div.style.transform='translateY(-4px) scale(1.02)';
+});
 
 list.appendChild(div);
 });
@@ -286,8 +261,9 @@ load();
 
 function draw(i,e){
 const ctx=document.getElementById('chart');
-if(chartInstance) chartInstance.destroy();
-chartInstance=new Chart(ctx,{
+if(chart) chart.destroy();
+
+chart=new Chart(ctx,{
 type:'doughnut',
 data:{datasets:[{data:[i,e]}]},
 options:{cutout:'70%'}
