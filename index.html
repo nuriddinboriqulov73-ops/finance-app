@@ -224,7 +224,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   } else {
     user = null;
     document.getElementById('app').classList.add('hidden');
-    document.getElementById('auth').classList.remove('hidden'); // 🔥 MUHIM
+    document.getElementById('auth').classList.remove('hidden');
   }
 
 });
@@ -377,7 +377,7 @@ loadData();
 async function logout(){
   await supabaseClient.auth.signOut();
 
-  // 🔥 darrov UI ni qaytaramiz
+  // 🔥 darrov UI fix
   document.getElementById('app').classList.add('hidden');
   document.getElementById('auth').classList.remove('hidden');
 }
