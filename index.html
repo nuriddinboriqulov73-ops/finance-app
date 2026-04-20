@@ -277,8 +277,9 @@ loadData();
 }
 
 // LOGOUT
-function logout(){
-location.reload();
+async function logout(){
+  await supabaseClient.auth.signOut();
+  location.reload();
 }
 </script>
 
