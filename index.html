@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Finance Pro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+font-family:Arial;
+background:#0f172a;
+color:#fff;
+padding:15px;
+margin:0;
+}
+.container{max-width:400px;margin:auto}
+.card{background:#1e293b;padding:15px;margin-top:15px;border-radius:15px}
+
+input,select,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+}
+
+button{background:#6366f1;color:#fff}
+
+.item{
+display:flex;
+justify-content:space-between;
+background:#0f172a;
+padding:10px;
+margin-top:8px;
+border-radius:10px;
+}
+
+.item button{
+width:auto;
+margin-left:5px;
+}
+
+.hidden{display:none}
+
+/* MODAL FIXED */
+#modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+align-items:center;
+justify-content:center;
+}
+
+#modal.show{
+display:flex;
+}
+
+.modal-box{
+background:#1e293b;
+padding:20px;
+border-radius:15px;
+width:90%;
+max-width:300px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div id="auth">
+<h2>Login</h2>
+<input id="email">
+<input id="password" type="password">
+<button onclick="signUp()">Sign Up</button>
+<button onclick="login()">Login</button>
+</div>
+
+<div id="app" class="hidden">
+
+<div class="card">
+<h3>Balans: <span id="balance">0</span></h3>
+<p>Kirim: <span id="income">0</span></p>
+<p>Chiqim: <span id="expense">0</span></p>
+</div>
+
+<div class="card">
+<canvas id="myChart"></canvas>
+</div>
+
+<div class="card">
+<input id="amount" placeholder="Summa">
+<select id="type">
+<option value="income">Kirim</option>
+<option value="expense">Chiqim</option>
+</select>
+<button onclick="addTransaction()">Qo‘shish</button>
+</div>
+
+<div class="card">
+<div id="list"></div>
+</div>
+
+<button onclick="logout()">Chiqish</button>
+
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+<div class="modal-box">
+<h3>Summa o‘zgartirish</h3>
+<input id="editAmount" type="number">
+<button onclick="saveEdit()">Saqlash</button>
+<button onclick="closeModal()">Bekor</button>
+</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+"https://stcuwmhrnokmyonycqcj.supabase.co",
+"sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
+);
+
+let user=null;
+let chart;
+let editId=null;
+
+// AUTO LOGIN
+window.onload=async()=>{
+const {data}=await supabaseClient.auth.getUser();
+if(data.user){
+user=data.user;
+openApp();
+}
+};
+
+// SIGNUP
+async function signUp(){
+let email=document.getElementById('email').value;
+let password=document.getElementById('password').value;
+
+let {error}=await supabaseClient.auth.signUp({email,password});
+if(error){alert(error.message);return;}
+
+alert("Ro‘yxatdan o‘tdi");
+}
+
+// LOGIN
+async function login(){
+let email=document.getElementById('email').value;
+let password=document.getElementById('password').value;
+
+let {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+if(error){alert(error.message);return;}
+
+user=data.user;
+openApp();
+}
+
+// ADD
+async function addTransaction(){
+let amount=parseInt(document.getElementById('amount').value);
+let type=document.getElementById('type').value;
+
+if(!amount){alert("Summa yoz!");return;}
+
+await supabaseClient.from('transactions').insert([{
+amount,type,user_id:user.id
+}]);
+
+loadData();
+}
+
+// LOAD
+async function loadData(){
+let {data}=await supabaseClient.from('transactions')
+.select('*').eq('user_id',user.id);
+
+let list=document.getElementById('list');
+list.innerHTML="";
+
+let balance=0,income=0,expense=0;
+
+data.forEach(t=>{
+if(t.type==='income'){income+=t.amount;balance+=t.amount;}
+else{expense+=t.amount;balance-=t.amount;}
+
+let div=document.createElement('div');
+div.className="item";
+div.innerHTML=`
+${t.type} - ${t.amount}
+<div>
+<button onclick="edit('${t.id}',${t.amount})">✏️</button>
+<button onclick="del('${t.id}')">❌</button>
+</div>
+`;
+list.appendChild(div);
+});
+
+document.getElementById('balance').innerText=balance;
+document.getElementById('income').innerText=income;
+document.getElementById('expense').innerText=expense;
+
+drawChart(income,expense);
+}
+
+// OPEN MODAL
+function edit(id,amount){
+editId=id;
+document.getElementById('editAmount').value=amount;
+document.getElementById('modal').classList.add('show');
+}
+
+// CLOSE MODAL
+function closeModal(){
+document.getElementById('modal').classList.remove('show');
+}
+
+// SAVE EDIT
+async function saveEdit(){
+let value=document.getElementById('editAmount').value;
+
+if(!value){
+alert("Summa kiriting!");
+return;
+}
+
+let newAmount=parseInt(value);
+
+if(isNaN(newAmount)){
+alert("Faqat raqam!");
+return;
+}
+
+await supabaseClient.from('transactions')
+.update({amount:newAmount})
+.eq('id',editId);
+
+closeModal();
+loadData();
+}
+
+// DELETE
+async function del(id){
+await supabaseClient.from('transactions').delete().eq('id',id);
+loadData();
+}
+
+// CHART
+function drawChart(income,expense){
+if(chart){chart.destroy();}
+chart=new Chart(document.getElementById('myChart'),{
+type:'doughnut',
+data:{
+labels:['Kirim','Chiqim'],
+datasets:[{data:[income,expense]}]
+}
+});
+}
+
+// OPEN APP
+function openApp(){
+document.getElementById('auth').style.display='none';
+document.getElementById('app').classList.remove('hidden');
+loadData();
+}
+
+// LOGOUT
+function logout(){
+location.reload();
+}
+</script>
+
+</body>
+</html>
