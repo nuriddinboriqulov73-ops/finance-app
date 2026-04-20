@@ -18,7 +18,9 @@ padding:15px;
 margin:0;
 animation:fadeIn 0.5s ease;
 }
-
+.hidden{
+  display: none;
+}
 @keyframes fadeIn{
 from{opacity:0; transform:translateY(10px);}
 to{opacity:1; transform:translateY(0);}
@@ -215,14 +217,16 @@ border-radius:10px;
 const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supabase.co","sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye");
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
+
   if(session){
     user = session.user;
     openApp();
   } else {
     user = null;
     document.getElementById('app').classList.add('hidden');
-    document.getElementById('auth').style.display = 'block';
+    document.getElementById('auth').classList.remove('hidden');
   }
+
 });
 
 let user=null;
