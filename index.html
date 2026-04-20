@@ -36,10 +36,21 @@ body::before{
 .hidden{display:none;}
 
 .card{
-  background:rgba(255,255,255,0.08);
-  backdrop-filter:blur(10px);
+  position:relative;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(15px);
+  border:1px solid rgba(255,255,255,0.2);
   padding:15px;
   margin-top:15px;
+  border-radius:20px;
+}
+
+.card::before{
+  content:'';
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:linear-gradient(120deg,rgba(255,255,255,0.2),transparent);
   border-radius:20px;
 }
 
@@ -57,22 +68,12 @@ body::before{
   margin-top:10px;
 }
 
-.input-box span{margin-right:10px;}
-
 .input-box input{
   border:none;
   background:none;
   outline:none;
   color:#fff;
   width:100%;
-}
-
-input,select{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  margin-top:10px;
 }
 
 button{
@@ -83,21 +84,6 @@ button{
   border-radius:12px;
   background:linear-gradient(135deg,#6366f1,#8b5cf6);
   color:#fff;
-  cursor:pointer;
-}
-
-.item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:8px;
-}
-
-.item button{
-  width:40px;
-  height:40px;
-  margin-left:5px;
-  border-radius:10px;
 }
 
 canvas{
@@ -128,31 +114,25 @@ canvas{
 
 <body>
 
-<!-- AUTH -->
 <div id="auth" class="container">
-
 <img src="logo.jpg" class="logo">
 
 <div class="card">
 <h2>Login</h2>
 
 <div class="input-box">
-<span>👤</span>
-<input id="email">
+<input id="email" placeholder="Email">
 </div>
 
 <div class="input-box">
-<span>🔒</span>
-<input id="password" type="password">
+<input id="password" type="password" placeholder="Password">
 </div>
 
 <button onclick="signup()">Ro‘yxatdan o‘tish</button>
 <button onclick="login()">Kirish</button>
 </div>
-
 </div>
 
-<!-- APP -->
 <div id="app" class="container hidden">
 
 <div class="card">
@@ -180,10 +160,8 @@ canvas{
 
 </div>
 
-<!-- MODAL -->
 <div id="modal">
 <div class="modal-box">
-<h3>Summa o‘zgartirish</h3>
 <input id="editAmount">
 <button onclick="saveEdit()">Saqlash</button>
 <button onclick="closeModal()">Bekor</button>
@@ -201,20 +179,19 @@ let user=null;
 let editId=null;
 let chartInstance;
 
-/* AUTH */
 supabaseClient.auth.onAuthStateChange((event,session)=>{
 if(session){
 user=session.user;
 openApp();
 }else{
-document.getElementById('auth').classList.remove('hidden');
-document.getElementById('app').classList.add('hidden');
+auth.classList.remove('hidden');
+app.classList.add('hidden');
 }
 });
 
 function openApp(){
-document.getElementById('auth').classList.add('hidden');
-document.getElementById('app').classList.remove('hidden');
+auth.classList.add('hidden');
+app.classList.remove('hidden');
 loadData();
 }
 
@@ -236,7 +213,6 @@ async function logout(){
 await supabaseClient.auth.signOut();
 }
 
-/* DATA */
 async function add(){
 await supabaseClient.from('transactions').insert({
 type:type.value,
@@ -248,44 +224,36 @@ loadData();
 
 async function loadData(){
 let {data}=await supabaseClient.from('transactions')
-.select('*')
-.eq('user_id',user.id);
+.select('*').eq('user_id',user.id);
 
 let income=0,expense=0;
 list.innerHTML='';
 
 data.forEach(t=>{
-
 if(t.type==='income') income+=t.amount;
 else expense+=t.amount;
 
-let typeText = t.type==='income' ? 'Kirim' : 'Chiqim';
+let typeText = t.type==='income'?'Kirim':'Chiqim';
 
 let div=document.createElement('div');
-div.className='item';
-
 div.innerHTML=`${typeText} - ${t.amount}
 <button onclick="edit('${t.id}',${t.amount})">✏️</button>
 <button onclick="del('${t.id}')">❌</button>`;
-
 list.appendChild(div);
-
 });
 
-document.getElementById('balance').innerText="Balans: "+(income-expense);
-document.getElementById('income').innerText="Kirim: "+income;
-document.getElementById('expense').innerText="Chiqim: "+expense;
+balance.innerText="Balans: "+(income-expense);
+income.innerText="Kirim: "+income;
+expense.innerText="Chiqim: "+expense;
 
 drawChart(income,expense);
 }
 
-/* DELETE */
 async function del(id){
 await supabaseClient.from('transactions').delete().eq('id',id);
 loadData();
 }
 
-/* EDIT */
 function edit(id,amount){
 editId=id;
 editAmount.value=amount;
@@ -305,21 +273,49 @@ function closeModal(){
 modal.classList.remove('show');
 }
 
-/* CHART */
+/* CENTER TEXT */
+const centerText = {
+id:'centerText',
+beforeDraw(chart){
+const {width,height}=chart;
+const ctx=chart.ctx;
+
+ctx.restore();
+ctx.font="16px sans-serif";
+ctx.fillStyle="#fff";
+ctx.textAlign="center";
+
+let val=chart.data.datasets[0].data;
+let bal=val[0]-val[1];
+
+ctx.fillText("Balans: "+bal,width/2,height/2);
+ctx.save();
+}
+};
+
 function drawChart(income,expense){
 
-const ctx = document.getElementById('chart');
+const ctx=document.getElementById('chart');
 
 if(chartInstance) chartInstance.destroy();
 
-chartInstance = new Chart(ctx,{
+chartInstance=new Chart(ctx,{
 type:'doughnut',
 data:{
 labels:['Kirim','Chiqim'],
 datasets:[{
-data:[income,expense]
+data:[income,expense],
+backgroundColor:[
+'rgba(59,130,246,0.5)',
+'rgba(239,68,68,0.5)'
+],
+borderWidth:2
 }]
-}
+},
+options:{
+cutout:'75%'
+},
+plugins:[centerText]
 });
 }
 
