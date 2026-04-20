@@ -48,7 +48,7 @@ body::before{
 
 /* LOGO */
 .logo{
-  width:80px;
+  width:90px;
   display:block;
   margin:0 auto 15px;
 }
@@ -94,12 +94,22 @@ button{
 .item{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   margin-top:8px;
+  font-size:15px;
 }
 
+.item button{
+  width:40px;
+  height:40px;
+  margin-left:5px;
+  border-radius:10px;
+}
+
+/* CHART */
 canvas{
   width:100%!important;
-  height:250px!important;
+  height:230px!important;
 }
 
 /* MODAL */
@@ -145,8 +155,8 @@ canvas{
 <input id="password" type="password">
 </div>
 
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
+<button onclick="signup()">Ro‘yxatdan o‘tish</button>
+<button onclick="login()">Kirish</button>
 </div>
 
 </div>
@@ -192,7 +202,7 @@ canvas{
 <script>
 
 const supabaseClient = supabase.createClient(
-"https://stcuwmhrnokmyonycqcj.supabase.co",
+"https://stcuwmhrnokmyonycqcj.supabase.co/rest/v1/",
 "sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
 );
 
@@ -238,7 +248,7 @@ await supabaseClient.auth.signOut();
 async function add(){
 await supabaseClient.from('transactions').insert({
 type:type.value,
-amount:amount.value,
+amount:Number(amount.value),
 user_id:user.id
 });
 loadData();
@@ -253,15 +263,21 @@ let income=0,expense=0;
 list.innerHTML='';
 
 data.forEach(t=>{
+
 if(t.type==='income') income+=t.amount;
 else expense+=t.amount;
 
+let typeText = t.type==='income' ? 'Kirim' : 'Chiqim';
+
 let div=document.createElement('div');
 div.className='item';
-div.innerHTML=`${t.type} - ${t.amount}
+
+div.innerHTML=`${typeText} - ${t.amount}
 <button onclick="edit('${t.id}',${t.amount})">✏️</button>
 <button onclick="del('${t.id}')">❌</button>`;
+
 list.appendChild(div);
+
 });
 
 balance.innerText="Balans: "+(income-expense);
@@ -286,8 +302,9 @@ modal.classList.add('show');
 
 async function saveEdit(){
 await supabaseClient.from('transactions')
-.update({amount:editAmount.value})
+.update({amount:Number(editAmount.value)})
 .eq('id',editId);
+
 closeModal();
 loadData();
 }
@@ -300,7 +317,8 @@ modal.classList.remove('show');
 let chart;
 function drawChart(income,expense){
 if(chart) chart.destroy();
-chart=new Chart(chartCanvas,{
+
+chart=new Chart(chart,{
 type:'doughnut',
 data:{
 labels:['Kirim','Chiqim'],
