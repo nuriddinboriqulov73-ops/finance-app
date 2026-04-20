@@ -45,21 +45,13 @@ body::before{
   border-radius:20px;
 }
 
-.card::before{
-  content:'';
-  position:absolute;
-  width:100%;
-  height:100%;
-  background:linear-gradient(120deg,rgba(255,255,255,0.2),transparent);
-  border-radius:20px;
-}
-
 .logo{
   width:90px;
   display:block;
   margin:0 auto 15px;
 }
 
+/* INPUT */
 .input-box{
   display:flex;
   background:rgba(255,255,255,0.1);
@@ -76,6 +68,7 @@ body::before{
   width:100%;
 }
 
+/* BUTTON */
 button{
   width:100%;
   padding:12px;
@@ -84,13 +77,51 @@ button{
   border-radius:12px;
   background:linear-gradient(135deg,#6366f1,#8b5cf6);
   color:#fff;
+  cursor:pointer;
 }
 
+/* ITEM */
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
+  margin-top:10px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.06);
+  transition:0.3s;
+}
+
+.item:hover{
+  transform:translateY(-3px);
+  background:rgba(255,255,255,0.12);
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+}
+
+.actions{
+  display:flex;
+  gap:8px;
+}
+
+.actions button{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  padding:0;
+  font-size:16px;
+}
+
+.actions button:last-child{
+  background:linear-gradient(135deg,#ef4444,#f87171);
+}
+
+/* CHART */
 canvas{
   width:100%!important;
   height:230px!important;
 }
 
+/* MODAL */
 #modal{
   position:fixed;
   top:0;left:0;
@@ -114,6 +145,7 @@ canvas{
 
 <body>
 
+<!-- AUTH -->
 <div id="auth" class="container">
 <img src="logo.jpg" class="logo">
 
@@ -133,6 +165,7 @@ canvas{
 </div>
 </div>
 
+<!-- APP -->
 <div id="app" class="container hidden">
 
 <div class="card">
@@ -160,6 +193,7 @@ canvas{
 
 </div>
 
+<!-- MODAL -->
 <div id="modal">
 <div class="modal-box">
 <input id="editAmount">
@@ -179,6 +213,7 @@ let user=null;
 let editId=null;
 let chartInstance;
 
+/* AUTH */
 supabaseClient.auth.onAuthStateChange((event,session)=>{
 if(session){
 user=session.user;
@@ -213,6 +248,7 @@ async function logout(){
 await supabaseClient.auth.signOut();
 }
 
+/* DATA */
 async function add(){
 await supabaseClient.from('transactions').insert({
 type:type.value,
@@ -236,9 +272,16 @@ else expense+=t.amount;
 let typeText = t.type==='income'?'Kirim':'Chiqim';
 
 let div=document.createElement('div');
-div.innerHTML=`${typeText} - ${t.amount}
+div.className='item';
+
+div.innerHTML=`
+<span>${typeText} - ${t.amount}</span>
+<div class="actions">
 <button onclick="edit('${t.id}',${t.amount})">✏️</button>
-<button onclick="del('${t.id}')">❌</button>`;
+<button onclick="del('${t.id}')">❌</button>
+</div>
+`;
+
 list.appendChild(div);
 });
 
@@ -249,11 +292,13 @@ expense.innerText="Chiqim: "+expense;
 drawChart(income,expense);
 }
 
+/* DELETE */
 async function del(id){
 await supabaseClient.from('transactions').delete().eq('id',id);
 loadData();
 }
 
+/* EDIT */
 function edit(id,amount){
 editId=id;
 editAmount.value=amount;
@@ -273,26 +318,26 @@ function closeModal(){
 modal.classList.remove('show');
 }
 
-/* CENTER TEXT */
-const centerText = {
+/* CHART CENTER */
+const centerText={
 id:'centerText',
 beforeDraw(chart){
 const {width,height}=chart;
 const ctx=chart.ctx;
-
 ctx.restore();
 ctx.font="16px sans-serif";
 ctx.fillStyle="#fff";
 ctx.textAlign="center";
 
-let val=chart.data.datasets[0].data;
-let bal=val[0]-val[1];
+let d=chart.data.datasets[0].data;
+let bal=d[0]-d[1];
 
 ctx.fillText("Balans: "+bal,width/2,height/2);
 ctx.save();
 }
 };
 
+/* CHART */
 function drawChart(income,expense){
 
 const ctx=document.getElementById('chart');
@@ -312,9 +357,7 @@ backgroundColor:[
 borderWidth:2
 }]
 },
-options:{
-cutout:'75%'
-},
+options:{cutout:'75%'},
 plugins:[centerText]
 });
 }
