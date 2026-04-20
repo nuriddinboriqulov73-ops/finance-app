@@ -1,63 +1,49 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance App</title>
 
-<title>Finance Pro</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-body{
+
 /* RESET */
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box;}
 
 /* BODY */
 body{
   font-family:'Segoe UI',sans-serif;
-  background: url('bg.jpg') no-repeat center center/cover;
+  background:url('bg.jpg') no-repeat center center/cover;
   min-height:100vh;
   color:#fff;
 }
 
-/* DARK OVERLAY */
 body::before{
   content:'';
   position:fixed;
-  top:0;
-  left:0;
   width:100%;
   height:100%;
   background:rgba(0,0,0,0.6);
+  top:0;left:0;
   z-index:-1;
 }
 
-/* CONTAINER */
 .container{
   max-width:420px;
   margin:auto;
   padding:15px;
 }
 
-/* HIDDEN */
-.hidden{
-  display:none;
-}
+.hidden{display:none;}
 
-/* CARD */
 .card{
   background:rgba(255,255,255,0.08);
   backdrop-filter:blur(10px);
   padding:15px;
   margin-top:15px;
   border-radius:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
 }
 
 /* LOGO */
@@ -67,19 +53,16 @@ body::before{
   margin:0 auto 15px;
 }
 
-/* INPUT BOX */
+/* INPUT */
 .input-box{
   display:flex;
-  align-items:center;
   background:rgba(255,255,255,0.1);
   padding:10px;
   border-radius:12px;
   margin-top:10px;
 }
 
-.input-box span{
-  margin-right:10px;
-}
+.input-box span{margin-right:10px;}
 
 .input-box input{
   border:none;
@@ -89,8 +72,7 @@ body::before{
   width:100%;
 }
 
-/* INPUT + SELECT */
-input, select{
+input,select{
   width:100%;
   padding:10px;
   border-radius:10px;
@@ -98,7 +80,6 @@ input, select{
   margin-top:10px;
 }
 
-/* BUTTON */
 button{
   width:100%;
   padding:12px;
@@ -107,82 +88,80 @@ button{
   border-radius:12px;
   background:linear-gradient(135deg,#6366f1,#8b5cf6);
   color:#fff;
-  font-weight:bold;
   cursor:pointer;
-  transition:0.3s;
 }
 
-button:hover{
-  transform:scale(1.05);
-  box-shadow:0 0 15px #6366f1;
-}
-
-/* BALANCE COLORS */
-#income{
-  color:#22c55e;
-}
-
-#expense{
-  color:#ef4444;
-}
-
-/* ITEM LIST */
 .item{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  background:rgba(255,255,255,0.05);
-  padding:10px;
-  border-radius:10px;
   margin-top:8px;
 }
 
-/* ITEM BUTTONS */
-.item button{
-  width:auto;
-  padding:5px 8px;
-  margin-left:5px;
-}
-
-/* CHART */
 canvas{
-  max-width:100%;
-  height:250px !important;
-  margin-top:15px;
+  width:100%!important;
+  height:250px!important;
 }
 
-/* MOBILE */
-@media(max-width:480px){
-  .container{
-    padding:10px;
-  }
+/* MODAL */
+#modal{
+  position:fixed;
+  top:0;left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
+
+#modal.show{display:flex;}
+
+.modal-box{
+  background:#1e293b;
+  padding:20px;
+  border-radius:20px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- AUTH -->
+<div id="auth" class="container">
 
-<div id="auth" >
-  <img src="logo.jpg" class="logo">
+<img src="logo.png" class="logo">
+
+<div class="card">
 <h2>Login</h2>
+
+<div class="input-box">
+<span>👤</span>
 <input id="email">
+</div>
+
+<div class="input-box">
+<span>🔒</span>
 <input id="password" type="password">
-<button onclick="signUp()">Sign Up</button>
+</div>
+
+<button onclick="signup()">Sign Up</button>
 <button onclick="login()">Login</button>
 </div>
 
-<div id="app" class="hidden">
+</div>
+
+<!-- APP -->
+<div id="app" class="container hidden">
 
 <div class="card">
-<h3>Balans: <span id="balance">0</span></h3>
-<p>Kirim: <span id="income">0</span></p>
-<p>Chiqim: <span id="expense">0</span></p>
+<h2 id="balance">Balans: 0</h2>
+<p id="income">Kirim: 0</p>
+<p id="expense">Chiqim: 0</p>
 </div>
 
 <div class="card">
-<canvas id="myChart"></canvas>
+<canvas id="chart"></canvas>
 </div>
 
 <div class="card">
@@ -191,16 +170,12 @@ canvas{
 <option value="income">Kirim</option>
 <option value="expense">Chiqim</option>
 </select>
-<button onclick="addTransaction()">Qo‘shish</button>
+<button onclick="add()">Qo‘shish</button>
 </div>
 
-<div class="card">
-<div id="list"></div>
-</div>
+<div class="card" id="list"></div>
 
 <button onclick="logout()">Chiqish</button>
-
-</div>
 
 </div>
 
@@ -208,180 +183,134 @@ canvas{
 <div id="modal">
 <div class="modal-box">
 <h3>Summa o‘zgartirish</h3>
-<input id="editAmount" type="number">
+<input id="editAmount">
 <button onclick="saveEdit()">Saqlash</button>
 <button onclick="closeModal()">Bekor</button>
 </div>
 </div>
 
 <script>
-const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supabase.co","sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye");
 
-supabaseClient.auth.onAuthStateChange((event, session) => {
-
-  if(session){
-    user = session.user;
-    openApp();
-  } else {
-    user = null;
-    document.getElementById('app').classList.add('hidden');
-    document.getElementById('auth').classList.remove('hidden');
-  }
-
-});
+const supabaseClient = supabase.createClient(
+"https://stcuwmhrnokmyonycqcj.supabase.co",
+"sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
+);
 
 let user=null;
-let chart;
 let editId=null;
 
-// AUTO LOGIN
-window.onload=async()=>{
-const {data}=await supabaseClient.auth.getUser();
-if(data.user){
-user=data.user;
+/* AUTH */
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+if(session){
+user=session.user;
 openApp();
+}else{
+document.getElementById('auth').classList.remove('hidden');
+document.getElementById('app').classList.add('hidden');
 }
-};
+});
 
-// SIGNUP
-async function signUp(){
-let email=document.getElementById('email').value;
-let password=document.getElementById('password').value;
-
-let {error}=await supabaseClient.auth.signUp({email,password});
-if(error){alert(error.message);return;}
-
-alert("Ro‘yxatdan o‘tdi");
-}
-
-// LOGIN
-async function login(){
-let email=document.getElementById('email').value;
-let password=document.getElementById('password').value;
-
-let {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
-if(error){alert(error.message);return;}
-
-user=data.user;
-openApp();
-}
-
-// ADD
-async function addTransaction(){
-let amount=parseInt(document.getElementById('amount').value);
-let type=document.getElementById('type').value;
-
-if(!amount){alert("Summa yoz!");return;}
-
-await supabaseClient.from('transactions').insert([{
-amount,type,user_id:user.id
-}]);
-
+function openApp(){
+document.getElementById('auth').classList.add('hidden');
+document.getElementById('app').classList.remove('hidden');
 loadData();
 }
 
-// LOAD
+async function signup(){
+await supabaseClient.auth.signUp({
+email:email.value,
+password:password.value
+});
+}
+
+async function login(){
+await supabaseClient.auth.signInWithPassword({
+email:email.value,
+password:password.value
+});
+}
+
+async function logout(){
+await supabaseClient.auth.signOut();
+}
+
+/* DATA */
+async function add(){
+await supabaseClient.from('transactions').insert({
+type:type.value,
+amount:amount.value,
+user_id:user.id
+});
+loadData();
+}
+
 async function loadData(){
 let {data}=await supabaseClient.from('transactions')
-.select('*').eq('user_id',user.id);
+.select('*')
+.eq('user_id',user.id);
 
-let list=document.getElementById('list');
-list.innerHTML="";
-
-let balance=0,income=0,expense=0;
+let income=0,expense=0;
+list.innerHTML='';
 
 data.forEach(t=>{
-if(t.type==='income'){income+=t.amount;balance+=t.amount;}
-else{expense+=t.amount;balance-=t.amount;}
+if(t.type==='income') income+=t.amount;
+else expense+=t.amount;
 
 let div=document.createElement('div');
-div.className="item";
-div.innerHTML=`
-${t.type} - ${t.amount}
-<div>
+div.className='item';
+div.innerHTML=`${t.type} - ${t.amount}
 <button onclick="edit('${t.id}',${t.amount})">✏️</button>
-<button onclick="del('${t.id}')">❌</button>
-</div>
-`;
+<button onclick="del('${t.id}')">❌</button>`;
 list.appendChild(div);
 });
 
-document.getElementById('balance').innerText=balance;
-document.getElementById('income').innerText=income;
-document.getElementById('expense').innerText=expense;
+balance.innerText="Balans: "+(income-expense);
+incomeEl.innerText="Kirim: "+income;
+expenseEl.innerText="Chiqim: "+expense;
 
 drawChart(income,expense);
 }
 
-// OPEN MODAL
-function edit(id,amount){
-editId=id;
-document.getElementById('editAmount').value=amount;
-document.getElementById('modal').classList.add('show');
-}
-
-// CLOSE MODAL
-function closeModal(){
-document.getElementById('modal').classList.remove('show');
-}
-
-// SAVE EDIT
-async function saveEdit(){
-let value=document.getElementById('editAmount').value;
-
-if(!value){
-alert("Summa kiriting!");
-return;
-}
-
-let newAmount=parseInt(value);
-
-if(isNaN(newAmount)){
-alert("Faqat raqam!");
-return;
-}
-
-await supabaseClient.from('transactions')
-.update({amount:newAmount})
-.eq('id',editId);
-
-closeModal();
-loadData();
-}
-
-// DELETE
+/* DELETE */
 async function del(id){
 await supabaseClient.from('transactions').delete().eq('id',id);
 loadData();
 }
 
-// CHART
+/* EDIT */
+function edit(id,amount){
+editId=id;
+editAmount.value=amount;
+modal.classList.add('show');
+}
+
+async function saveEdit(){
+await supabaseClient.from('transactions')
+.update({amount:editAmount.value})
+.eq('id',editId);
+closeModal();
+loadData();
+}
+
+function closeModal(){
+modal.classList.remove('show');
+}
+
+/* CHART */
+let chart;
 function drawChart(income,expense){
-if(chart){chart.destroy();}
-chart=new Chart(document.getElementById('myChart'),{
+if(chart) chart.destroy();
+chart=new Chart(chartCanvas,{
 type:'doughnut',
 data:{
 labels:['Kirim','Chiqim'],
-datasets:[{data:[income,expense]}]
+datasets:[{
+data:[income,expense]
+}]
 }
 });
 }
 
-// OPEN APP
-function openApp(){
-document.getElementById('auth').style.display='none';
-document.getElementById('app').classList.remove('hidden');
-loadData();
-}
-
-// LOGOUT
-async function logout(){
-  await supabaseClient.auth.signOut();
-
-  // 🔥 darrov UI fix
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('auth').classList.remove('hidden');
-}
 </script>
 
 </body>
