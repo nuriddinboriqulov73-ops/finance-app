@@ -215,7 +215,20 @@ border-radius:10px;
 const supabaseClient = supabase.createClient(
 "https://stcuwmhrnokmyonycqcj.supabase.co",
 "sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
+  
 );
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+
+  if(session){
+    user = session.user;
+    openApp();
+  } else {
+    user = null;
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('auth').style.display = 'block';
+  }
+
+});
 
 let user=null;
 let chart;
