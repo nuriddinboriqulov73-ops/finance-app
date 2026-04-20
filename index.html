@@ -12,7 +12,7 @@
 
 body{
   font-family:'Segoe UI',sans-serif;
-  background:url('bg.jpg') no-repeat center center/cover;
+  background:url('bg.jpg') no-repeat center/cover;
   min-height:100vh;
   color:#fff;
 }
@@ -20,8 +20,7 @@ body{
 body::before{
   content:'';
   position:fixed;
-  width:100%;
-  height:100%;
+  width:100%;height:100%;
   background:rgba(0,0,0,0.6);
   top:0;left:0;
   z-index:-1;
@@ -36,41 +35,54 @@ body::before{
 .hidden{display:none;}
 
 .card{
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(15px);
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(15px);
   border:1px solid rgba(255,255,255,0.2);
-  padding:15px;
-  margin-top:15px;
+  padding:20px;
+  margin-top:20px;
   border-radius:20px;
 }
 
-.logo{
-  width:90px;
-  display:block;
-  margin:0 auto 15px;
+/* LOGIN */
+.login-box{
+  text-align:center;
 }
 
-/* INPUT */
+.logo{
+  width:80px;
+  margin-bottom:15px;
+}
+
+.login-box input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,0.1);
+  color:#fff;
+}
+
+/* ROW */
 .row{
   display:flex;
   gap:10px;
-  margin-bottom:10px;
 }
 
 .row input,.row select{
   flex:1;
-  background:rgba(255,255,255,0.1);
-  border:none;
-  border-radius:12px;
   padding:12px;
+  border-radius:12px;
+  border:none;
+  background:rgba(255,255,255,0.1);
   color:#fff;
 }
-
-.row input{flex:2;}
+.row input{flex:2}
 
 /* BUTTON */
-.add-btn{
+.btn{
   width:100%;
+  margin-top:12px;
   padding:14px;
   border:none;
   border-radius:14px;
@@ -81,8 +93,8 @@ body::before{
   transition:0.3s;
 }
 
-.add-btn:hover{transform:scale(1.05);}
-.add-btn:active{transform:scale(0.95);}
+.btn:hover{transform:scale(1.05);}
+.btn:active{transform:scale(0.95);}
 
 /* ITEM */
 .item{
@@ -96,7 +108,8 @@ body::before{
 
 .actions{display:flex;gap:5px;}
 .actions button{
-  width:35px;height:35px;border:none;border-radius:8px;
+  width:35px;height:35px;
+  border:none;border-radius:8px;
 }
 .actions button:last-child{
   background:#ef4444;
@@ -112,7 +125,6 @@ body::before{
   align-items:center;
   justify-content:center;
 }
-
 .loader{
   width:50px;height:50px;
   border:5px solid #fff;
@@ -120,10 +132,7 @@ body::before{
   border-radius:50%;
   animation:spin 1s linear infinite;
 }
-
-@keyframes spin{
-  100%{transform:rotate(360deg);}
-}
+@keyframes spin{100%{transform:rotate(360deg);}}
 
 /* SUCCESS */
 .success{
@@ -143,23 +152,20 @@ canvas{width:100%!important;height:220px!important;}
 
 <body>
 
-<div class="loading" id="loading">
-  <div class="loader"></div>
-</div>
+<div id="loading" class="loading"><div class="loader"></div></div>
+<div id="success" class="success">✔ Saqlandi</div>
 
-<div class="success" id="success">✔ Saqlandi</div>
-
+<!-- LOGIN -->
 <div id="auth" class="container">
+<div class="card login-box">
 <img src="logo.jpg" class="logo">
-
-<div class="card">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-
-<button class="add-btn" onclick="login()">Kirish</button>
+<button class="btn" onclick="login()">Kirish</button>
 </div>
 </div>
 
+<!-- APP -->
 <div id="app" class="container hidden">
 
 <div class="card">
@@ -180,12 +186,12 @@ canvas{width:100%!important;height:220px!important;}
 <option value="expense">Chiqim</option>
 </select>
 </div>
-<button class="add-btn" onclick="add()">Qo‘shish</button>
+<button class="btn" onclick="add()">Qo‘shish</button>
 </div>
 
-<div class="card" id="list"></div>
+<div id="list" class="card"></div>
 
-<button class="add-btn" onclick="logout()">Chiqish</button>
+<button class="btn" onclick="logout()">Chiqish</button>
 
 </div>
 
@@ -195,22 +201,31 @@ const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supab
 let user=null;
 let chartInstance;
 
-function showLoading(x){loading.style.display=x?'flex':'none';}
-function showSuccess(){
-  success.style.display='block';
-  setTimeout(()=>success.style.display='none',1500);
+function loadOn(x){loading.style.display=x?'flex':'none';}
+function ok(){
+success.style.display='block';
+setTimeout(()=>success.style.display='none',1500);
 }
 
 supabaseClient.auth.onAuthStateChange((e,s)=>{
-if(s){user=s.user;auth.classList.add('hidden');app.classList.remove('hidden');load();}
-else{auth.classList.remove('hidden');app.classList.add('hidden');}
+if(s){
+user=s.user;
+auth.classList.add('hidden');
+app.classList.remove('hidden');
+load();
+}else{
+auth.classList.remove('hidden');
+app.classList.add('hidden');
+}
 });
 
 async function login(){
-showLoading(true);
+loadOn(true);
 await supabaseClient.auth.signInWithPassword({
-email:email.value,password:password.value});
-showLoading(false);
+email:email.value,
+password:password.value
+});
+loadOn(false);
 }
 
 async function logout(){
@@ -218,14 +233,14 @@ await supabaseClient.auth.signOut();
 }
 
 async function add(){
-showLoading(true);
+loadOn(true);
 await supabaseClient.from('transactions').insert({
 type:type.value,
 amount:Number(amount.value),
 user_id:user.id
 });
-showLoading(false);
-showSuccess();
+loadOn(false);
+ok();
 load();
 }
 
@@ -241,11 +256,13 @@ t.type==='income'?inc+=t.amount:exp+=t.amount;
 
 let div=document.createElement('div');
 div.className='item';
+
 div.innerHTML=`
 <span>${t.type} - ${t.amount}</span>
 <div class="actions">
 <button onclick="del('${t.id}')">❌</button>
 </div>`;
+
 list.appendChild(div);
 });
 
@@ -264,6 +281,7 @@ load();
 function draw(i,e){
 const ctx=document.getElementById('chart');
 if(chartInstance) chartInstance.destroy();
+
 chartInstance=new Chart(ctx,{
 type:'doughnut',
 data:{datasets:[{data:[i,e]}]},
