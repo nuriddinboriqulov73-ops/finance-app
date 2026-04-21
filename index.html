@@ -14,7 +14,6 @@ body{
   font-family:sans-serif;
   background:url('bg.jpg') no-repeat center/cover;
   color:#fff;
-  min-height:100vh;
 }
 
 .container{max-width:420px;margin:auto;padding:15px;}
@@ -51,9 +50,38 @@ input,select{
   border-radius:12px;
   background:#6366f1;
   color:#fff;
-  cursor:pointer;
-  touch-action:manipulation;
 }
+
+/* SWIPE */
+.item{
+  position:relative;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.swipe-content{
+  background:rgba(255,255,255,0.05);
+  padding:12px;
+  border-radius:12px;
+  transition:0.3s;
+}
+
+.swipe-actions{
+  position:absolute;
+  right:0;
+  top:0;
+  height:100%;
+  display:flex;
+}
+
+.swipe-actions button{
+  width:60px;
+  border:none;
+  color:#fff;
+}
+
+.swipe-actions button:first-child{background:#6366f1;}
+.swipe-actions button:last-child{background:#ef4444;}
 
 #success{
   position:fixed;
@@ -66,8 +94,23 @@ input,select{
   display:none;
 }
 
-/* item */
-.item{margin-top:10px;}
+#editModal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+}
+
+.modal-box{
+  background:#111;
+  padding:20px;
+  border-radius:20px;
+  width:90%;
+  max-width:300px;
+}
 </style>
 </head>
 
@@ -75,19 +118,16 @@ input,select{
 
 <div id="success">✔ Saqlandi</div>
 
-<!-- AUTH -->
 <div id="auth" class="container">
-  <form id="authForm" class="card">
-    <img src="logo.jpg" class="logo">
-    <input id="email" placeholder="Email" required>
-    <input id="password" type="password" placeholder="Password" required>
-
-    <button class="btn" type="submit">Kirish</button>
-    <button class="btn" type="button" id="signupBtn">Ro‘yxatdan o‘tish</button>
-  </form>
+<div class="card">
+<img src="logo.jpg" class="logo">
+<input id="email" placeholder="Email">
+<input id="password" type="password">
+<button class="btn" onclick="login()">Kirish</button>
+<button class="btn" onclick="signup()">Ro‘yxatdan o‘tish</button>
+</div>
 </div>
 
-<!-- APP -->
 <div id="app" class="container" style="display:none;">
 
 <div class="card">
@@ -117,12 +157,20 @@ input,select{
 <option value="income">Kirim</option>
 <option value="expense">Chiqim</option>
 </select>
-<button class="btn" id="addBtn">Qo‘shish</button>
+<button class="btn" onclick="add()">Qo‘shish</button>
 </div>
 
 <div id="list" class="card"></div>
-<button class="btn" id="logoutBtn">Chiqish</button>
+<button class="btn" onclick="logout()">Chiqish</button>
 
+</div>
+
+<div id="editModal">
+<div class="modal-box">
+<input id="editAmount">
+<input id="editNote">
+<button onclick="saveEdit()">Saqlash</button>
+</div>
 </div>
 
 <script>
@@ -131,64 +179,48 @@ const supabaseClient = supabase.createClient(
   "sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
 );
 
-let user=null, chart;
+let user=null, editId=null, chart;
 
-/* success */
 function ok(){
   success.style.display='block';
   setTimeout(()=>success.style.display='none',1500);
 }
 
-/* auth */
 supabaseClient.auth.onAuthStateChange((e,s)=>{
-  if(s){
-    user=s.user;
-    auth.style.display='none';
-    app.style.display='block';
-    load();
-  }else{
-    auth.style.display='block';
-    app.style.display='none';
-  }
+if(s){user=s.user;auth.style.display='none';app.style.display='block';load();}
+else{auth.style.display='block';app.style.display='none';}
 });
 
-/* login */
-authForm.addEventListener("submit", async (e)=>{
-  e.preventDefault();
+async function signup(){
+  const {error}=await supabaseClient.auth.signUp({
+    email:email.value,
+    password:password.value
+  });
+  if(error) alert(error.message); else ok();
+}
+
+async function login(){
   const {error}=await supabaseClient.auth.signInWithPassword({
     email:email.value,
     password:password.value
   });
   if(error) alert(error.message);
-});
+}
 
-/* signup */
-signupBtn.addEventListener("click", async ()=>{
-  const {error}=await supabaseClient.auth.signUp({
-    email:email.value,
-    password:password.value
-  });
-  if(error) alert(error.message);
-  else ok();
-});
+async function logout(){
+  await supabaseClient.auth.signOut();
+}
 
-/* add */
-addBtn.addEventListener("click", async ()=>{
+async function add(){
   await supabaseClient.from('transactions').insert({
     type:type.value,
     amount:Number(amount.value),
     note:note.value,
     user_id:user.id
   });
-  ok(); load();
-});
+  ok();load();
+}
 
-/* logout */
-logoutBtn.addEventListener("click", async ()=>{
-  await supabaseClient.auth.signOut();
-});
-
-/* icon */
 function getIcon(text){
   if(!text) return '💰';
   text=text.toLowerCase();
@@ -197,19 +229,16 @@ function getIcon(text){
   return '💰';
 }
 
-/* load */
 async function load(){
   let {data}=await supabaseClient.from('transactions')
     .select('*').eq('user_id',user.id);
 
   list.innerHTML='';
   let total=0;
-
   let today=new Date().toDateString();
   let month=new Date().getMonth();
 
-  let tInc=0,tExp=0;
-  let mInc=0,mExp=0;
+  let tInc=0,tExp=0,mInc=0,mExp=0;
 
   data.forEach(t=>{
     t.type==='income'?total+=t.amount:total-=t.amount;
@@ -226,10 +255,39 @@ async function load(){
 
     let div=document.createElement('div');
     div.className='item';
+
     div.innerHTML=`
-      ${getIcon(t.note)} ${t.amount}<br>
+    <div class="swipe-content">
+      ${getIcon(t.note)} <b>${t.amount}</b><br>
       <small>${t.note||''}</small>
-    `;
+    </div>
+    <div class="swipe-actions">
+      <button onclick="edit('${t.id}','${t.amount}','${t.note}')">✏️</button>
+      <button onclick="del('${t.id}')">❌</button>
+    </div>`;
+
+    let startX=0;
+
+    div.addEventListener('touchstart',e=>{
+      startX=e.touches[0].clientX;
+    });
+
+    div.addEventListener('touchmove',e=>{
+      let diff=e.touches[0].clientX-startX;
+      if(diff<0){
+        div.querySelector('.swipe-content').style.transform=`translateX(${diff}px)`;
+      }
+    });
+
+    div.addEventListener('touchend',()=>{
+      let el=div.querySelector('.swipe-content');
+      if(el.style.transform.includes('-80')){
+        el.style.transform='translateX(-120px)';
+      }else{
+        el.style.transform='translateX(0)';
+      }
+    });
+
     list.appendChild(div);
   });
 
@@ -252,6 +310,27 @@ async function load(){
       }]
     }
   });
+}
+
+async function del(id){
+  await supabaseClient.from('transactions').delete().eq('id',id);
+  load();
+}
+
+function edit(id,a,n){
+  editId=id;
+  editAmount.value=a;
+  editNote.value=n;
+  editModal.style.display='flex';
+}
+
+async function saveEdit(){
+  await supabaseClient.from('transactions')
+    .update({amount:Number(editAmount.value),note:editNote.value})
+    .eq('id',editId);
+
+  editModal.style.display='none';
+  ok();load();
 }
 </script>
 
