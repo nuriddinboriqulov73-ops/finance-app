@@ -265,15 +265,36 @@ else{auth.style.display='block';app.style.display='none';}
 });
 
 async function signup(){
-loadOn(true);
-await supabaseClient.auth.signUp({email:email.value,password:password.value});
-loadOn(false);ok();
-}
+  loadOn(true);
 
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: email.value,
+    password: password.value
+  });
+
+  loadOn(false);
+
+  if(error){
+    alert(error.message);
+  } else {
+    alert("Emailni tasdiqlang!");
+  }
+}
 async function login(){
-loadOn(true);
-await supabaseClient.auth.signInWithPassword({email:email.value,password:password.value});
-loadOn(false);
+  loadOn(true);
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: email.value,
+    password: password.value
+  });
+
+  loadOn(false);
+
+  if(error){
+    alert(error.message); // 🔥 muammoni ko‘rsatadi
+  } else {
+    console.log("Kirdi:", data);
+  }
 }
 
 async function logout(){await supabaseClient.auth.signOut();}
