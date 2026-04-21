@@ -224,7 +224,7 @@ select:focus{
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button class="btn" onclick="login()">Kirish</button>
-<button class="btn" onclick="signup()">Ro‘yxatdan o‘tish</button>
+<button class="btn" onclick="signup(event)">Ro‘yxatdan o‘tish</button>
 </div>
 </div>
 
@@ -277,10 +277,7 @@ async function signup(e){
 
   loadOn(true);
 
-  const { error } = await supabaseClient.auth.signUp({
-    email: email.value,
-    password: password.value
-  });
+ const btn = document.querySelector(".btn");
 
   loadOn(false);
   btn.disabled = false;
