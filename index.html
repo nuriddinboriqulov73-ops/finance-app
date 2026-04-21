@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finance App</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
@@ -18,16 +17,8 @@ body{
   min-height:100vh;
 }
 
-body::before{
-  content:'';
-  position:fixed;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.6);
-  top:0;left:0;
-  z-index:-1;
-}
-
 .container{max-width:420px;margin:auto;padding:15px;}
+
 .card{
   background:rgba(255,255,255,0.08);
   backdrop-filter:blur(15px);
@@ -36,7 +27,6 @@ body::before{
   margin-top:15px;
 }
 
-/* INPUT */
 input,select{
   width:100%;
   padding:12px;
@@ -47,7 +37,6 @@ input,select{
   color:#fff;
 }
 
-/* BUTTON */
 .btn{
   width:100%;
   margin-top:10px;
@@ -72,25 +61,26 @@ input,select{
 .item.new{animation:fadeUp 0.4s;}
 .item.remove{transform:translateX(120px);opacity:0;}
 
+/* swipe delete icon */
 .item::after{
-  content:'O‘chirish';
+  content:'❌';
   position:absolute;
-  right:0;
-  top:0;
-  height:100%;
-  width:100px;
+  right:15px;
+  top:50%;
+  transform:translateY(-50%);
+  width:40px;
+  height:40px;
   background:#ef4444;
+  border-radius:10px;
   display:flex;
   align-items:center;
   justify-content:center;
+  opacity:0;
+  transition:0.3s;
 }
 
-.actions{margin-top:5px;}
-.actions button{
-  margin-right:5px;
-  border:none;
-  border-radius:8px;
-  padding:5px 10px;
+.item.swiping::after{
+  opacity:1;
 }
 
 .success{
@@ -117,6 +107,7 @@ input,select{
 
 <div id="auth" class="container">
 <div class="card">
+<img src="logo.jpg" style="width:80px;margin:auto;display:block;">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button class="btn" onclick="login()">Kirish</button>
@@ -125,7 +116,6 @@ input,select{
 </div>
 
 <div id="app" class="container" style="display:none;">
-
 <div class="card">
 <h3 id="balance">0</h3>
 </div>
@@ -141,12 +131,16 @@ input,select{
 </div>
 
 <div id="list" class="card"></div>
-<button class="btn" onclick="logout()">Chiqish</button>
 
+<button class="btn" onclick="logout()">Chiqish</button>
 </div>
 
 <script>
- const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supabase.co","sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye")
+const supabaseClient = supabase.createClient(
+  "https://stcuwmhrnokmyonycqcj.supabase.co",
+  "sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye" 
+);
+
 let user=null;
 
 function ok(){
@@ -212,29 +206,33 @@ async function load(){
     div.innerHTML=`
       <b>${t.amount}</b> (${t.type})<br>
       <small>${t.note||''}</small>
-      <div class="actions">
+      <div>
         <button onclick="edit('${t.id}','${t.amount}','${t.note}')">✏️</button>
-        <button onclick="del('${t.id}',event)">❌</button>
+        <button onclick="del('${t.id}')">❌</button>
       </div>
     `;
 
-    /* SWIPE */
     let startX=0;
+
     div.addEventListener('touchstart',e=>{
       startX=e.touches[0].clientX;
     });
 
     div.addEventListener('touchmove',e=>{
       let diff=e.touches[0].clientX-startX;
-      if(diff<0) div.style.transform=`translateX(${diff}px)`;
+      if(diff<0){
+        div.style.transform=`translateX(${diff}px)`;
+        if(diff<-20) div.classList.add('swiping');
+      }
     });
 
     div.addEventListener('touchend',async ()=>{
-      if(div.style.transform.includes('-100')){
+      if(div.style.transform.includes('-80')){
         div.classList.add('remove');
         setTimeout(()=>del(t.id),300);
       }else{
         div.style.transform='translateX(0)';
+        div.classList.remove('swiping');
       }
     });
 
@@ -249,14 +247,13 @@ async function del(id){
   load();
 }
 
-async function edit(id,amount,note){
-  let a=prompt("Summa:",amount);
-  let n=prompt("Izoh:",note);
-
-  if(a===null) return;
+async function edit(id,a,n){
+  let na=prompt("Summa:",a);
+  let nn=prompt("Izoh:",n);
+  if(na===null) return;
 
   await supabaseClient.from('transactions')
-    .update({amount:Number(a),note:n})
+    .update({amount:Number(na),note:nn})
     .eq('id',id);
 
   ok();load();
