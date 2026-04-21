@@ -27,12 +27,7 @@ body::before{
   z-index:-1;
 }
 
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:15px;
-}
-
+.container{max-width:420px;margin:auto;padding:15px;}
 .card{
   background:rgba(255,255,255,0.08);
   backdrop-filter:blur(15px);
@@ -41,11 +36,8 @@ body::before{
   margin-top:15px;
 }
 
-/* LOGIN */
-.login-box{text-align:center;}
-.logo{width:80px;margin-bottom:10px;}
-
-input{
+/* INPUT */
+input,select{
   width:100%;
   padding:12px;
   margin-top:10px;
@@ -54,93 +46,6 @@ input{
   background:rgba(255,255,255,0.1);
   color:#fff;
 }
-  /* SELECT FIX */
-select{
-  appearance:none;
-  -webkit-appearance:none;
-  -moz-appearance:none;
-
-  background:rgba(255,255,255,0.1);
-  color:#fff;
-
-  border:none;
-  border-radius:12px;
-
-  padding:12px;
-  padding-right:35px;
-
-  outline:none;
-  cursor:pointer;
-
-  font-size:14px;
-}
-
-/* ARROW ICON */
-select{
-  background-image:url("data:image/svg+xml;utf8,<svg fill='white' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-  background-repeat:no-repeat;
-  background-position:right 10px center;
-}
-
-/* ROW FIX */
-.row{
-  display:flex;
-  gap:10px;
-}
-
-.row input{
-  flex:2;
-}
-
-.row select{
-  flex:1;
-}
-  /* SELECT BASE */
-select{
-  appearance:none;
-  -webkit-appearance:none;
-
-  background:rgba(255,255,255,0.1);
-  color:#fff;
-
-  border:none;
-  border-radius:12px;
-
-  padding:12px;
-  padding-right:35px;
-
-  outline:none;
-  cursor:pointer;
-
-  font-size:14px;
-  transition:0.3s;
-}
-
-/* ARROW */
-select{
-  background-image:url("data:image/svg+xml;utf8,<svg fill='white' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
-  background-repeat:no-repeat;
-  background-position:right 10px center;
-}
-
-/* HOVER */
-select:hover{
-  background:rgba(255,255,255,0.2);
-}
-
-/* ACTIVE */
-select:focus{
-  box-shadow:0 0 10px rgba(99,102,241,0.8);
-}
-  option{
-  background:#1e293b;
-  color:#fff;
-}
-
-/* ROW */
-.row{display:flex;gap:10px;}
-.row input{flex:2;}
-.row select{flex:1;}
 
 /* BUTTON */
 .btn{
@@ -151,44 +56,41 @@ select:focus{
   border-radius:12px;
   background:#6366f1;
   color:#fff;
-  cursor:pointer;
 }
 
 /* ITEM */
 .item{
-  display:flex;
-  justify-content:space-between;
+  position:relative;
   padding:12px;
   margin-top:10px;
   border-radius:12px;
   background:rgba(255,255,255,0.05);
-  transition:0.2s;
+  transition:0.25s;
+  overflow:hidden;
 }
 
-.actions button{
-  width:35px;height:35px;
-  border:none;border-radius:8px;
+.item.new{animation:fadeUp 0.4s;}
+.item.remove{transform:translateX(120px);opacity:0;}
+
+.item::after{
+  content:'O‘chirish';
+  position:absolute;
+  right:0;
+  top:0;
+  height:100%;
+  width:100px;
   background:#ef4444;
-  color:#fff;
-}
-
-/* LOADING */
-.loading{
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  display:none;
+  display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(0,0,0,0.7);
 }
 
-.loader{
-  width:50px;height:50px;
-  border:5px solid #fff;
-  border-top:5px solid transparent;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
+.actions{margin-top:5px;}
+.actions button{
+  margin-right:5px;
+  border:none;
+  border-radius:8px;
+  padding:5px 10px;
 }
 
 .success{
@@ -196,31 +98,25 @@ select:focus{
   bottom:20px;
   left:50%;
   transform:translateX(-50%);
-  background:linear-gradient(135deg,#22c55e,#16a34a);
-  padding:12px 25px;
-  border-radius:12px;
+  background:#22c55e;
+  padding:10px 20px;
+  border-radius:10px;
   display:none;
-  color:#fff;
-  font-weight:bold;
-  box-shadow:0 0 15px rgba(34,197,94,0.8);
-  animation:fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn{
-  from{opacity:0;transform:translateX(-50%) translateY(20px);}
-  to{opacity:1;transform:translateX(-50%) translateY(0);}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
 }
 </style>
 </head>
 
 <body>
 
-<div id="loading" class="loading"><div class="loader"></div></div>
-<div id="success" class="success">✔ Saqlandi</div>
+<div id="success">✔ Saqlandi</div>
 
 <div id="auth" class="container">
-<div class="card login-box">
-<img src="logo.jpg" class="logo">
+<div class="card">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button class="btn" onclick="login()">Kirish</button>
@@ -231,40 +127,32 @@ select:focus{
 <div id="app" class="container" style="display:none;">
 
 <div class="card">
-<h2 id="balance">Balans: 0</h2>
-<p id="income">Kirim: 0</p>
-<p id="expense">Chiqim: 0</p>
+<h3 id="balance">0</h3>
 </div>
 
 <div class="card">
-<canvas id="chart"></canvas>
-</div>
-
-<div class="card">
-<div class="row">
 <input id="amount" placeholder="Summa">
+<input id="note" placeholder="Izoh">
 <select id="type">
 <option value="income">Kirim</option>
 <option value="expense">Chiqim</option>
 </select>
-</div>
 <button class="btn" onclick="add()">Qo‘shish</button>
 </div>
 
 <div id="list" class="card"></div>
-
 <button class="btn" onclick="logout()">Chiqish</button>
 
 </div>
 
 <script>
-const supabaseClient = supabase.createClient("https://stcuwmhrnokmyonycqcj.supabase.co","sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye");
-
+const supabaseClient = supabase.createClient("YOUR_URL","YOUR_KEY");
 let user=null;
-let chart;
 
-function loadOn(x){loading.style.display=x?'flex':'none';}
-function ok(){success.style.display='block';setTimeout(()=>success.style.display='none',1500);}
+function ok(){
+  success.style.display='block';
+  setTimeout(()=>success.style.display='none',1500);
+}
 
 supabaseClient.auth.onAuthStateChange((e,s)=>{
 if(s){user=s.user;auth.style.display='none';app.style.display='block';load();}
@@ -272,117 +160,106 @@ else{auth.style.display='block';app.style.display='none';}
 });
 
 async function signup(e){
-  const btn = e.target;
+  const btn=e.target;
+  btn.disabled=true;
 
-  btn.disabled = true;
-
-  loadOn(true);
-
-  const { error } = await supabaseClient.auth.signUp({
-    email: email.value,
-    password: password.value
+  const {error}=await supabaseClient.auth.signUp({
+    email:email.value,
+    password:password.value
   });
 
-  loadOn(false);
-  btn.disabled = false;
+  btn.disabled=false;
 
-  if(error){
-    alert(error.message);
-  } else {
-    ok();
-  }
+  if(error) alert(error.message);
+  else ok();
 }
+
 async function login(){
-  loadOn(true);
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
+  const {error}=await supabaseClient.auth.signInWithPassword({
+    email:email.value,
+    password:password.value
   });
-
-  loadOn(false);
-
-  if(error){
-    alert(error.message); // 🔥 muammoni ko‘rsatadi
-  } else {
-    console.log("Kirdi:", data);
-  }
+  if(error) alert(error.message);
 }
 
-async function logout(){await supabaseClient.auth.signOut();}
+async function logout(){
+  await supabaseClient.auth.signOut();
+}
 
 async function add(){
-loadOn(true);
-await supabaseClient.from('transactions').insert({
-type:type.value,
-amount:Number(amount.value),
-user_id:user.id
-});
-loadOn(false);ok();load();
+  await supabaseClient.from('transactions').insert({
+    type:type.value,
+    amount:Number(amount.value),
+    note:note.value,
+    user_id:user.id
+  });
+  ok();load();
 }
 
 async function load(){
-let {data}=await supabaseClient.from('transactions')
-.select('*').eq('user_id',user.id);
+  let {data}=await supabaseClient.from('transactions')
+    .select('*').eq('user_id',user.id);
 
-let inc=0,exp=0;
-list.innerHTML='';
+  list.innerHTML='';
+  let total=0;
 
-data.forEach(t=>{
-t.type==='income'?inc+=t.amount:exp+=t.amount;
+  data.forEach(t=>{
+    t.type==='income'?total+=t.amount:total-=t.amount;
 
-let typeText = t.type==='income'?'Kirim':'Chiqim';
+    let div=document.createElement('div');
+    div.className='item new';
 
-let div=document.createElement('div');
-div.className='item';
+    div.innerHTML=`
+      <b>${t.amount}</b> (${t.type})<br>
+      <small>${t.note||''}</small>
+      <div class="actions">
+        <button onclick="edit('${t.id}','${t.amount}','${t.note}')">✏️</button>
+        <button onclick="del('${t.id}',event)">❌</button>
+      </div>
+    `;
 
-div.innerHTML=`
-<span>${typeText} - ${t.amount}</span>
-<div class="actions">
-<button onclick="del('${t.id}')">❌</button>
-</div>`;
+    /* SWIPE */
+    let startX=0;
+    div.addEventListener('touchstart',e=>{
+      startX=e.touches[0].clientX;
+    });
 
-/* 🔥 JS HOVER */
-div.addEventListener('mouseenter',()=>{
-  div.style.transform='translateY(-4px) scale(1.02)';
-});
+    div.addEventListener('touchmove',e=>{
+      let diff=e.touches[0].clientX-startX;
+      if(diff<0) div.style.transform=`translateX(${diff}px)`;
+    });
 
-div.addEventListener('mouseleave',()=>{
-  div.style.transform='scale(1)';
-});
+    div.addEventListener('touchend',async ()=>{
+      if(div.style.transform.includes('-100')){
+        div.classList.add('remove');
+        setTimeout(()=>del(t.id),300);
+      }else{
+        div.style.transform='translateX(0)';
+      }
+    });
 
-div.addEventListener('mousedown',()=>{
-  div.style.transform='scale(0.95)';
-});
+    list.appendChild(div);
+  });
 
-div.addEventListener('mouseup',()=>{
-  div.style.transform='translateY(-4px) scale(1.02)';
-});
-
-list.appendChild(div);
-});
-
-balance.innerText="Balans: "+(inc-exp);
-income.innerText="Kirim: "+inc;
-expense.innerText="Chiqim: "+exp;
-
-draw(inc,exp);
+  balance.innerText="Balans: "+total;
 }
 
 async function del(id){
-await supabaseClient.from('transactions').delete().eq('id',id);
-load();
+  await supabaseClient.from('transactions').delete().eq('id',id);
+  load();
 }
 
-function draw(i,e){
-const ctx=document.getElementById('chart');
-if(chart) chart.destroy();
+async function edit(id,amount,note){
+  let a=prompt("Summa:",amount);
+  let n=prompt("Izoh:",note);
 
-chart=new Chart(ctx,{
-type:'doughnut',
-data:{datasets:[{data:[i,e]}]},
-options:{cutout:'70%'}
-});
+  if(a===null) return;
+
+  await supabaseClient.from('transactions')
+    .update({amount:Number(a),note:n})
+    .eq('id',id);
+
+  ok();load();
 }
 </script>
 
