@@ -273,11 +273,15 @@ else{auth.style.display='block';app.style.display='none';}
 
 async function signup(e){
   const btn = e.target;
+
   btn.disabled = true;
 
   loadOn(true);
 
- const btn = document.querySelector(".btn");
+  const { error } = await supabaseClient.auth.signUp({
+    email: email.value,
+    password: password.value
+  });
 
   loadOn(false);
   btn.disabled = false;
@@ -285,12 +289,7 @@ async function signup(e){
   if(error){
     alert(error.message);
   } else {
-    ok(); // 🔥 yashil chiqadi
-
-    // 👉 hint beramiz
-    setTimeout(()=>{
-      alert("Endi 'Kirish' tugmasini bosing");
-    },1000);
+    ok();
   }
 }
 async function login(){
