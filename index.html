@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+[21/04/2026 18:33] Nuriddinbek: <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finance App</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -14,7 +14,6 @@ body{
   font-family:sans-serif;
   background:url('bg.jpg') no-repeat center/cover;
   color:#fff;
-  min-height:100vh;
 }
 
 .container{max-width:420px;margin:auto;padding:15px;}
@@ -48,42 +47,33 @@ input,select{
 }
 
 /* ITEM */
-.item{
-  position:relative;
-  padding:12px;
-  margin-top:10px;
-  border-radius:12px;
+.item{position:relative;margin-top:10px;overflow:hidden;}
+
+.swipe-content{
   background:rgba(255,255,255,0.05);
-  transition:0.25s;
-  overflow:hidden;
-}
-
-.item.new{animation:fadeUp 0.4s;}
-.item.remove{transform:translateX(120px);opacity:0;}
-
-/* swipe delete icon */
-.item::after{
-  content:'❌';
-  position:absolute;
-  right:15px;
-  top:50%;
-  transform:translateY(-50%);
-  width:40px;
-  height:40px;
-  background:#ef4444;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  opacity:0;
+  padding:12px;
+  border-radius:12px;
   transition:0.3s;
 }
 
-.item.swiping::after{
-  opacity:1;
+.swipe-actions{
+  position:absolute;
+  right:0;
+  top:0;
+  height:100%;
+  display:flex;
 }
 
-.success{
+.swipe-actions button{
+  width:60px;
+  border:none;
+  color:#fff;
+}
+
+.swipe-actions button:first-child{background:#6366f1;}
+.swipe-actions button:last-child{background:#ef4444;}
+
+#success{
   position:fixed;
   bottom:20px;
   left:50%;
@@ -94,9 +84,22 @@ input,select{
   display:none;
 }
 
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(20px);}
-  to{opacity:1;transform:translateY(0);}
+#editModal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+}
+
+.modal-box{
+  background:#111;
+  padding:20px;
+  border-radius:20px;
+  width:90%;
+  max-width:300px;
 }
 </style>
 </head>
@@ -107,17 +110,27 @@ input,select{
 
 <div id="auth" class="container">
 <div class="card">
-<img src="logo.jpg" style="width:80px;margin:auto;display:block;">
 <input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<input id="password" type="password">
 <button class="btn" onclick="login()">Kirish</button>
 <button class="btn" onclick="signup(event)">Ro‘yxatdan o‘tish</button>
 </div>
 </div>
 
 <div id="app" class="container" style="display:none;">
+
 <div class="card">
 <h3 id="balance">0</h3>
+</div>
+
+<div class="card">
+<canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+<h4>Oylik statistika</h4>
+<p id="monthIncome">Kirim: 0</p>
+<p id="monthExpense">Chiqim: 0</p>
 </div>
 
 <div class="card">
@@ -131,17 +144,25 @@ input,select{
 </div>
 
 <div id="list" class="card"></div>
-
 <button class="btn" onclick="logout()">Chiqish</button>
+
+</div>
+
+<div id="editModal">
+<div class="modal-box">
+<input id="editAmount">
+<input id="editNote">
+<button onclick="saveEdit()">Saqlash</button>
+</div>
 </div>
 
 <script>
 const supabaseClient = supabase.createClient(
   "https://stcuwmhrnokmyonycqcj.supabase.co",
-  "sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye" 
+  "sb_publishable_-3rNzJ68C7OVcKGYOeDWvw_VC5n-jye"
 );
 
-let user=null;
+let user=null, editId=null, chart;
 
 function ok(){
   success.style.display='block';
@@ -156,16 +177,12 @@ else{auth.style.display='block';app.style.display='none';}
 async function signup(e){
   const btn=e.target;
   btn.disabled=true;
-
   const {error}=await supabaseClient.auth.signUp({
     email:email.value,
     password:password.value
   });
-
   btn.disabled=false;
-
-  if(error) alert(error.message);
-  else ok();
+  if(error) alert(error.message); else ok();
 }
 
 async function login(){
@@ -190,56 +207,81 @@ async function add(){
   ok();load();
 }
 
+function getIcon(text){
+[21/04/2026 18:33] Nuriddinbek: if(!text) return '💰';
+  text=text.toLowerCase();
+  if(text.includes('ovqat')) return '🍔';
+  if(text.includes('taksi')) return '🚕';
+  if(text.includes('internet')) return '📶';
+  if(text.includes('o‘yin')) return '🎮';
+  if(text.includes('ish')) return '💼';
+  if(text.includes('ichimlik')) return '🥤';
+  return '💰';
+}
+
 async function load(){
   let {data}=await supabaseClient.from('transactions')
     .select('*').eq('user_id',user.id);
 
   list.innerHTML='';
-  let total=0;
+  let total=0, mInc=0, mExp=0;
+  let month=new Date().getMonth();
 
   data.forEach(t=>{
     t.type==='income'?total+=t.amount:total-=t.amount;
 
+    let d=new Date(t.created_at);
+    if(d.getMonth()===month){
+      t.type==='income'?mInc+=t.amount:mExp+=t.amount;
+    }
+
     let div=document.createElement('div');
-    div.className='item new';
+    div.className='item';
 
     div.innerHTML=`
-      <b>${t.amount}</b> (${t.type})<br>
-      <small>${t.note||''}</small>
-      <div>
+      <div class="swipe-content">
+        ${getIcon(t.note)} <b>${t.amount}</b><br>
+        <small>${t.note||''}</small>
+      </div>
+      <div class="swipe-actions">
         <button onclick="edit('${t.id}','${t.amount}','${t.note}')">✏️</button>
         <button onclick="del('${t.id}')">❌</button>
       </div>
     `;
 
     let startX=0;
-
-    div.addEventListener('touchstart',e=>{
-      startX=e.touches[0].clientX;
-    });
-
+    div.addEventListener('touchstart',e=>startX=e.touches[0].clientX);
     div.addEventListener('touchmove',e=>{
       let diff=e.touches[0].clientX-startX;
-      if(diff<0){
-        div.style.transform=`translateX(${diff}px)`;
-        if(diff<-20) div.classList.add('swiping');
-      }
+      if(diff<0) div.querySelector('.swipe-content').style.transform=`translateX(${diff}px)`;
     });
-
-    div.addEventListener('touchend',async ()=>{
-      if(div.style.transform.includes('-80')){
-        div.classList.add('remove');
-        setTimeout(()=>del(t.id),300);
-      }else{
-        div.style.transform='translateX(0)';
-        div.classList.remove('swiping');
-      }
+    div.addEventListener('touchend',()=>{
+      let el=div.querySelector('.swipe-content');
+      if(el.style.transform.includes('-80')) el.style.transform='translateX(-120px)';
+      else el.style.transform='translateX(0)';
     });
 
     list.appendChild(div);
   });
 
   balance.innerText="Balans: "+total;
+  monthIncome.innerText="Kirim: "+mInc;
+  monthExpense.innerText="Chiqim: "+mExp;
+
+  const ctx=document.getElementById('chart');
+  if(chart) chart.destroy();
+
+  chart=new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['Kirim','Chiqim'],
+      datasets:[{
+        data:[mInc,mExp],
+        backgroundColor:['#22c55e','#ef4444']
+      }]
+    },
+    options:{cutout:'70%'}
+  });
 }
 
 async function del(id){
@@ -247,15 +289,19 @@ async function del(id){
   load();
 }
 
-async function edit(id,a,n){
-  let na=prompt("Summa:",a);
-  let nn=prompt("Izoh:",n);
-  if(na===null) return;
+function edit(id,a,n){
+  editId=id;
+  editAmount.value=a;
+  editNote.value=n;
+  editModal.style.display='flex';
+}
 
+async function saveEdit(){
   await supabaseClient.from('transactions')
-    .update({amount:Number(na),note:nn})
-    .eq('id',id);
+    .update({amount:Number(editAmount.value),note:editNote.value})
+    .eq('id',editId);
 
+  editModal.style.display='none';
   ok();load();
 }
 </script>
